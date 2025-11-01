@@ -1,0 +1,28 @@
+{
+  "deck": {
+    "name": "React Native Concepts",
+    "description": "Important concepts for React Native development"
+  },
+  "flashcards": [
+    {
+      "question": "What is React Native?",
+      "answer": "A framework for building mobile apps using React",
+      "category": "Introduction",
+      "hint": "Think about mobile development"
+    },
+    {
+      "question": "What are React Native components?",
+      "answer": "Reusable pieces of UI that return React elements",
+      "category": "Components",
+      "hint": "Building blocks of UI"
+    },
+    {
+      "question": "What is JSX?",
+      "answer": "JavaScript XML - syntax extension for JavaScript",
+      "category": "Basics",
+      "hint": "It looks like HTML in JavaScript"
+    }
+  ],
+  "export_date": "2024-01-15T10:30:00.000Z",
+  "version": "1.0"
+}
