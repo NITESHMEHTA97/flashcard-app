@@ -295,7 +295,13 @@ export default function CategoryFilterPage() {
           
           {selectedCategories.length > 0 && (
             <button 
-              onClick={() => navigate(`/deck/${deckId}/study`)}
+              onClick={() => {
+                const queryParams = new URLSearchParams();
+                if (selectedCategories.length > 0) {
+                  selectedCategories.forEach(cat => queryParams.append('categories', cat));
+                }
+                navigate(`/deck/${deckId}/study?${queryParams.toString()}`);
+              }}
               className="btn btn-primary"
               disabled={filteredFlashcards.length === 0}
             >

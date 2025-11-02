@@ -198,12 +198,22 @@ app.delete('/api/decks/:id', async (req, res) => {
   }
 });
 
-// Get flashcards for a deck
+// Get flashcards for a deck with optional category filter
 app.get('/api/decks/:id/flashcards', async (req, res) => {
   try {
-    const flashcards = await Flashcard.find({ deck_id: req.params.id }).sort({ created_at: -1 });
+    const { categories } = req.query;
+    const query = { deck_id: req.params.id };
+    
+    // Add category filter if categories are provided
+    if (categories) {
+      const categoryList = Array.isArray(categories) ? categories : [categories];
+      query.category = { $in: categoryList };
+    }
+    
+    const flashcards = await Flashcard.find(query).sort({ created_at: -1 });
     res.json(flashcards);
   } catch (error) {
+    console.error('Error fetching flashcards:', error);
     res.status(500).json({ error: 'Failed to fetch flashcards' });
   }
 });

@@ -84,9 +84,9 @@ export const flashcardAPI = {
     }
   },
   
-  getByDeck: async (deckId) => {
+  getByDeck: async (deckId, config = {}) => {
     try {
-      const response = await api.get(`/decks/${deckId}/flashcards`);
+      const response = await api.get(`/decks/${deckId}/flashcards`, config);
       return response;
     } catch (error) {
       console.error('Error fetching flashcards:', error);

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { flashcardAPI } from '../services/api';
 import FlashcardImage from '../components/FlashcardImage';
 
 export default function StudyPage() {
   const { deckId } = useParams();
+  const [searchParams] = useSearchParams();
+  const categories = searchParams.getAll('categories');
   const [flashcards, setFlashcards] = useState([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -15,17 +17,31 @@ export default function StudyPage() {
 
   useEffect(() => {
     loadFlashcards();
-  }, [deckId]);
+    // Reset card index and answer state when deck or categories change
+    setCurrentCardIndex(0);
+    setShowAnswer(false);
+    setShowHint(false);
+  }, [deckId, categories.join(',')]); // Re-run when deckId or categories change
 
   const loadFlashcards = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await flashcardAPI.getByDeck(deckId);
+      
+      // Pass categories as query parameters if they exist
+      const params = {};
+      if (categories.length > 0) {
+        params.categories = categories;
+      }
+      
+      const response = await flashcardAPI.getByDeck(deckId, { params });
       const cards = response.data;
       
       if (cards.length === 0) {
-        setError('No flashcards available in this deck.');
+        const message = categories.length > 0 
+          ? 'No flashcards found in the selected categories.'
+          : 'No flashcards available in this deck.';
+        setError(message);
         return;
       }
       
@@ -116,8 +132,18 @@ export default function StudyPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Study Mode</h1>
-        <Link to={`/deck/${deckId}`} className="btn btn-outline">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Study Mode</h1>
+          {categories.length > 0 && (
+            <p className="text-gray-600 mt-1">
+              Filtered by {categories.length} {categories.length === 1 ? 'category' : 'categories'}
+            </p>
+          )}
+        </div>
+        <Link 
+          to={`/deck/${deckId}`} 
+          className="btn btn-outline"
+        >
           ← Back to Deck
         </Link>
       </div>
