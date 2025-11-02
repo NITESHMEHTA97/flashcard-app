@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { flashcardAPI } from '../services/api';
 import FlashcardImage from '../components/FlashcardImage';
@@ -13,11 +13,25 @@ export default function EditCardPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageToRemove, setImageToRemove] = useState(false);
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
+  // Load flashcard data when component mounts or cardId changes
   useEffect(() => {
     loadFlashcard();
   }, [cardId]);
+
+  // Cleanup preview URL when component unmounts or when image changes
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const loadFlashcard = async () => {
     try {
@@ -39,12 +53,41 @@ export default function EditCardPage() {
       setCategory(card.category || '');
       setHint(card.hint || '');
       
+      // Reset image states but keep any existing preview
+      if (!imagePreview) {
+        setImageFile(null);
+        setImageToRemove(false);
+      }
+      
     } catch (error) {
       console.error('Failed to load flashcard:', error);
       setError('Failed to load flashcard. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+    
+    setImageFile(file);
+    setImageToRemove(false);
+    
+    // Create preview URL for the selected file
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+  };
+  
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setImageToRemove(true);
   };
 
   const handleSubmit = async (e) => {
@@ -59,6 +102,7 @@ export default function EditCardPage() {
     setError('');
 
     try {
+      // First update the flashcard data
       await flashcardAPI.update(cardId, {
         question: question.trim(),
         answer: answer.trim(),
@@ -66,12 +110,21 @@ export default function EditCardPage() {
         hint: hint.trim()
       });
       
+      // Handle image upload if a new image was selected
+      if (imageFile) {
+        await flashcardAPI.uploadImage(cardId, imageFile);
+      } 
+      // Handle image removal if remove was clicked
+      else if (imageToRemove && flashcard.image) {
+        await flashcardAPI.removeImage(cardId);
+      }
+      
       alert('Flashcard updated successfully!');
       navigate(`/deck/${deckId}`);
       
     } catch (error) {
       console.error('Failed to update flashcard:', error);
-      setError('Failed to update flashcard. Please try again.');
+      setError(error.response?.data?.message || 'Failed to update flashcard. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -131,9 +184,7 @@ export default function EditCardPage() {
         </div>
       )}
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Flashcard Form */}
-        <div className="card">
+      <div className="card">
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-gray-700 mb-2 font-medium">
@@ -193,6 +244,80 @@ export default function EditCardPage() {
               />
             </div>
             
+            {/* Image Upload Section */}
+            <div className="mt-6 pt-4 border-t border-gray-200 mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Flashcard Image</h3>
+              
+              {/* Current Image or Placeholder */}
+              <div className="mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    {imagePreview || (flashcard?.image && !imageToRemove) ? (
+                      <FlashcardImage 
+                        flashcard={{
+                          ...flashcard,
+                          // Only include the image property if it's not a preview
+                          ...(imagePreview ? {} : { image: flashcard.image }),
+                          // Include the preview URL if available
+                          ...(imagePreview ? { previewUrl: imagePreview } : {})
+                        }}
+                        size="sm"
+                        showControls={false}
+                      />
+                    ) : (
+                      <div className="w-16 h-12 flex items-center justify-center border-2 border-dashed rounded-md text-gray-400 text-xs">
+                        No Image
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {imagePreview || (flashcard?.image && !imageToRemove) 
+                      ? 'Click the view button to see full size' 
+                      : 'Add an image to this flashcard'}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Image Controls */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                  id="image-upload"
+                  disabled={saving}
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+                >
+                  {imagePreview || (flashcard?.image && !imageToRemove) ? 'Change' : 'Add Image'}
+                </label>
+                
+                {(imagePreview || (flashcard?.image && !imageToRemove)) && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-sm text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    disabled={saving}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              
+              <p className="mt-2 text-sm text-gray-500">
+                {imagePreview 
+                  ? 'New image will be saved when you click Update Flashcard'
+                  : flashcard?.image && !imageToRemove 
+                    ? 'Click Update Flashcard to apply changes' 
+                    : 'JPG, PNG up to 5MB'}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
             <div className="flex gap-4">
               <button 
                 type="submit" 
@@ -213,19 +338,6 @@ export default function EditCardPage() {
             </div>
           </form>
         </div>
-
-        {/* Image Upload Section */}
-        {flashcard && (
-          <div className="mb-2">
-            <FlashcardImage 
-              flashcard={flashcard}
-              size="sm"
-              showControls={true}
-              onImageUpdate={loadFlashcard}
-            />
-          </div>
-        )}
-      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { flashcardAPI, deckAPI } from '../services/api';
@@ -14,6 +14,9 @@ export default function CreateCardPage() {
   const [hint, setHint] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,6 +33,30 @@ export default function CreateCardPage() {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+    
+    setImageFile(file);
+    
+    // Create preview URL for the selected file
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -42,7 +69,8 @@ export default function CreateCardPage() {
     setError('');
 
     try {
-      await flashcardAPI.create({
+      // First create the flashcard
+      const response = await flashcardAPI.create({
         deck_id: deckId,
         question: question.trim(),
         answer: answer.trim(),
@@ -52,13 +80,23 @@ export default function CreateCardPage() {
       
       alert('Flashcard created successfully!');
       
+      // Handle image upload if an image was selected
+      if (imageFile) {
+        await flashcardAPI.uploadImage(response.data._id, imageFile);
+      }
+      
+      // Clean up the preview URL
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      
       // Reset form and go back to deck
       setQuestion('');
       setAnswer('');
       setCategory('');
       setHint('');
       
-      // Navigate back to deck
+      // Redirect to deck page after successful creation
       navigate(`/deck/${deckId}`);
       
     } catch (error) {
@@ -164,12 +202,62 @@ export default function CreateCardPage() {
           </div>
           <div className="mt-6">
             <h3 className="font-semibold mb-3">Flashcard Image</h3>
-            <FlashcardImage 
-              flashcard={newFlashcard || flashcard}
-              size="lg"
-              showControls={true}
-              onImageUpdate={loadFlashcard} // or whatever refresh function you have
-            />
+            {imagePreview ? (
+              <div className="mb-4">
+                <div className="relative">
+ <FlashcardImage 
+                    flashcard={{ previewUrl: imagePreview }}
+                    size="lg"
+                    showControls={false}
+                  />
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                    disabled={loading}
+                  >
+                    Change
+                  </button>
+                  <span className="text-gray-400">|</span>
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="text-sm text-red-600 hover:text-red-800"
+                    disabled={loading}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <p className="text-gray-500 mb-3">No image selected</p>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100"
+                  disabled={loading}
+                >
+                  Add Image
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+            )}
           </div>
           <div className="flex gap-4">
             <button 

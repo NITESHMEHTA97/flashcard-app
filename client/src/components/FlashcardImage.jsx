@@ -7,7 +7,8 @@ export default function FlashcardImage({ flashcard, size = 'sm', showControls = 
   const [imageLoaded, setImageLoaded] = useState(false);
   const fileInputRef = React.useRef(null);
 
-  const imageUrl = flashcardAPI.getImageUrl(flashcard);
+  // Use previewUrl if provided, otherwise get the URL from the API
+  const imageUrl = flashcard.previewUrl || (flashcard.image ? flashcardAPI.getImageUrl(flashcard) : '');
 
   const sizeClasses = {
     container: {
