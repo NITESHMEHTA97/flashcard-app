@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { flashcardAPI, deckAPI } from '../services/api';
+import FlashcardImage from '../components/FlashcardImage';
 
 export default function CreateCardPage() {
   const { deckId } = useParams();
@@ -161,7 +162,15 @@ export default function CreateCardPage() {
               disabled={loading}
             />
           </div>
-          
+          <div className="mt-6">
+            <h3 className="font-semibold mb-3">Flashcard Image</h3>
+            <FlashcardImage 
+              flashcard={newFlashcard || flashcard}
+              size="lg"
+              showControls={true}
+              onImageUpdate={loadFlashcard} // or whatever refresh function you have
+            />
+          </div>
           <div className="flex gap-4">
             <button 
               type="submit" 

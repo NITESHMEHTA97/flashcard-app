@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { deckAPI, flashcardAPI } from '../services/api';
+import FlashcardImage from '../components/FlashcardImage';
 
 
 export default function DeckDetailPage() {
@@ -215,6 +216,15 @@ export default function DeckDetailPage() {
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Answer:</p>
                     <p className="text-gray-800">{card.answer}</p>
+                    
+                    {card.image && (
+                      <div className="mb-2">
+                        <FlashcardImage 
+                          flashcard={card}
+                          size="sm"
+                        />
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-2">

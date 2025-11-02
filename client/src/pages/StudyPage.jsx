@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { flashcardAPI } from '../services/api';
+import FlashcardImage from '../components/FlashcardImage';
 
 export default function StudyPage() {
   const { deckId } = useParams();
@@ -139,6 +140,16 @@ export default function StudyPage() {
           <h2 className="text-2xl font-semibold text-gray-800 mb-6 leading-relaxed">
             {currentCard.question}
           </h2>
+          
+          {/* Flashcard Image */}
+          {currentCard.image && (
+            <div className="mb-6 text-center">
+              <FlashcardImage 
+                flashcard={currentCard}
+                size="md"
+              />
+            </div>
+          )}
 
           {/* Answer (revealed on click) */}
           {showAnswer ? (

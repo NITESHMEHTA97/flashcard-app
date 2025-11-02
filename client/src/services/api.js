@@ -74,6 +74,16 @@ export const deckAPI = {
 };
 
 export const flashcardAPI = {
+  getById: async (id) => {
+    try {
+      const response = await api.get(`/flashcards/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching flashcard:', error);
+      throw error;
+    }
+  },
+  
   getByDeck: async (deckId) => {
     try {
       const response = await api.get(`/decks/${deckId}/flashcards`);
@@ -132,6 +142,25 @@ export const flashcardAPI = {
       console.error('Error deleting flashcard:', error);
       throw error;
     }
+  },
+
+  uploadImage: async (flashcardId, imageFile) => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    
+    const response = await api.post(`/flashcards/${flashcardId}/image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response;
+  },
+  
+  removeImage: async (flashcardId) => {
+    const response = await api.delete(`/flashcards/${flashcardId}/image`);
+    return response;
+  },
+  
+  getImageUrl: (flashcard) => {
+    return flashcard.image ? `/api/uploads/${flashcard.image}` : null;
   }
 };
 

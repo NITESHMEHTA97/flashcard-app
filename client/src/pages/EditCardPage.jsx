@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { flashcardAPI } from '../services/api';
+import FlashcardImage from '../components/FlashcardImage';
 
 export default function EditCardPage() {
   const { deckId, cardId } = useParams();
@@ -23,10 +24,9 @@ export default function EditCardPage() {
       setLoading(true);
       setError('');
       
-      // We need to get the specific flashcard
-      // Since we don't have a direct endpoint, we'll get all and filter
-      const response = await flashcardAPI.getByDeck(deckId);
-      const card = response.data.find(c => c._id === cardId);
+      // Get the specific flashcard by ID
+      const response = await flashcardAPI.getById(cardId);
+      const card = response.data;
       
       if (!card) {
         setError('Flashcard not found');
@@ -131,85 +131,100 @@ export default function EditCardPage() {
         </div>
       )}
       
-      <div className="card max-w-2xl">
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2 font-medium">
-              Question *
-            </label>
-            <textarea
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              className="form-input form-textarea"
-              placeholder="Enter the question"
-              rows="3"
-              required
-              disabled={saving}
-            />
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2 font-medium">
-              Answer *
-            </label>
-            <textarea
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              className="form-input form-textarea"
-              placeholder="Enter the answer"
-              rows="3"
-              required
-              disabled={saving}
-            />
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2 font-medium">
-              Category (Optional)
-            </label>
-            <input
-              type="text"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="form-input"
-              placeholder="e.g., Basics, Advanced, etc."
-              disabled={saving}
-            />
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2 font-medium">
-              Hint (Optional)
-            </label>
-            <textarea
-              value={hint}
-              onChange={(e) => setHint(e.target.value)}
-              className="form-input form-textarea"
-              placeholder="Enter a helpful hint"
-              rows="2"
-              disabled={saving}
-            />
-          </div>
-          
-          <div className="flex gap-4">
-            <button 
-              type="submit" 
-              className="btn btn-primary"
-              disabled={saving}
-            >
-              {saving ? 'Updating...' : 'Update Flashcard'}
-            </button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Flashcard Form */}
+        <div className="card">
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2 font-medium">
+                Question *
+              </label>
+              <textarea
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                className="form-input form-textarea"
+                placeholder="Enter the question"
+                rows="3"
+                required
+                disabled={saving}
+              />
+            </div>
             
-            <button 
-              type="button" 
-              onClick={() => navigate(`/deck/${deckId}`)}
-              className="btn btn-outline"
-              disabled={saving}
-            >
-              Cancel
-            </button>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2 font-medium">
+                Answer *
+              </label>
+              <textarea
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                className="form-input form-textarea"
+                placeholder="Enter the answer"
+                rows="3"
+                required
+                disabled={saving}
+              />
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2 font-medium">
+                Category (Optional)
+              </label>
+              <input
+                type="text"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="form-input"
+                placeholder="e.g., Basics, Advanced, etc."
+                disabled={saving}
+              />
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2 font-medium">
+                Hint (Optional)
+              </label>
+              <textarea
+                value={hint}
+                onChange={(e) => setHint(e.target.value)}
+                className="form-input form-textarea"
+                placeholder="Enter a helpful hint"
+                rows="2"
+                disabled={saving}
+              />
+            </div>
+            
+            <div className="flex gap-4">
+              <button 
+                type="submit" 
+                className="btn btn-primary"
+                disabled={saving}
+              >
+                {saving ? 'Updating...' : 'Update Flashcard'}
+              </button>
+              
+              <button 
+                type="button" 
+                onClick={() => navigate(`/deck/${deckId}`)}
+                className="btn btn-outline"
+                disabled={saving}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Image Upload Section */}
+        {flashcard && (
+          <div>
+            <FlashcardImage 
+              flashcard={flashcard}
+              size="lg"
+              showControls={true}
+              onImageUpdate={loadFlashcard}
+            />
           </div>
-        </form>
+        )}
       </div>
     </div>
   );
