@@ -110,16 +110,16 @@ export default function DeckDetailPage() {
     <div>
       {/* Deck Info Header */}
       <div className="card mb-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">{deck.name}</h1>
-            <p className="text-gray-600 mb-4">{deck.description}</p>
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2 truncate">{deck.name}</h1>
+            <p className="text-gray-600 mb-4 line-clamp-2">{deck.description}</p>
             <div className="flex items-center gap-6 text-sm text-gray-600">
               <span>{deck.card_count || 0} cards</span>
               <span>Created: {new Date(deck.created_at).toLocaleDateString()}</span>
             </div>
           </div>
-          <Link to="/" className="btn btn-outline">
+          <Link to="/" className="px-2 py-1 text-xs border rounded hover:bg-gray-50 whitespace-nowrap flex-shrink-0 self-start">
             ← Back to Decks
           </Link>
         </div>
