@@ -192,58 +192,64 @@ export default function DeckDetailPage() {
           <div className="space-y-6">
             {flashcards.map((card) => (
               <div key={card._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-semibold text-gray-800 flex-1">
-                    {card.question}
-                  </h3>
-                  <div className="flex gap-2 ml-4">
-                    <Link
-                      to={`/deck/${deckId}/edit-card/${card._id}`}
-                      className="text-blue-500 hover:text-blue-700 text-sm font-medium"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDeleteFlashcard(card._id, card.question)}
-                      className="text-red-500 hover:text-red-700 text-sm font-medium"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Answer:</p>
-                    <p className="text-gray-800">{card.answer}</p>
-                    
-                    {card.image && (
-                      <div className="mb-2">
-                        <FlashcardImage 
-                          flashcard={card}
-                          size="sm"
-                        />
-                      </div>
-                    )}
+                <div className="mb-3">
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-lg font-semibold text-gray-800 flex-1">
+                      {card.question}
+                    </h3>
+                    <div className="flex gap-2 ml-4">
+                      <Link
+                        to={`/deck/${deckId}/edit-card/${card._id}`}
+                        className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteFlashcard(card._id, card.question)}
+                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                   
-                  <div className="space-y-2">
+                  {/* Category and Hint in one line */}
+                  <div className="flex flex-wrap gap-4 mt-2 text-sm">
                     {card.category && (
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Category:</p>
-                        <span className="inline-block bg-primary text-white px-2 py-1 rounded text-sm">
+                      <div className="flex items-center">
+                        <span className="text-gray-600 mr-1">Category:</span>
+                        <span className="bg-primary text-white px-2 py-0.5 rounded text-sm">
                           {card.category}
                         </span>
                       </div>
                     )}
                     
                     {card.hint && (
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Hint:</p>
-                        <p className="text-gray-800 text-sm italic">{card.hint}</p>
+                      <div className="flex items-center">
+                        <span className="text-gray-600 mr-1">Hint:</span>
+                        <span className="text-gray-800 italic">{card.hint}</span>
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Answer and Image in one line */}
+                <div className="flex flex-row gap-4">
+                  {/* Answer - takes remaining space */}
+                  <div className="bg-gray-50 p-4 rounded-lg flex-1">
+                    <p className="text-sm text-gray-600 mb-1">Answer:</p>
+                    <p className="text-gray-800">{card.answer}</p>
+                  </div>
+                  
+                  {/* Image - extra small size */}
+                  {card.image && (
+                    <div className="flex items-center justify-center w-10 h-8 flex-shrink-0">
+                      <FlashcardImage 
+                        flashcard={card}
+                        size="xs"
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 <div className="text-xs text-gray-500 mt-3">

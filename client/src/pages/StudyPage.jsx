@@ -141,21 +141,21 @@ export default function StudyPage() {
             {currentCard.question}
           </h2>
           
-          {/* Flashcard Image */}
-          {currentCard.image && (
-            <div className="mb-6 text-center">
-              <FlashcardImage 
-                flashcard={currentCard}
-                size="md"
-              />
-            </div>
-          )}
-
           {/* Answer (revealed on click) */}
           {showAnswer ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
               <p className="text-green-800 text-lg font-medium mb-2">Answer:</p>
-              <p className="text-green-700 text-xl">{currentCard.answer}</p>
+              <p className="text-green-700 text-xl mb-4">{currentCard.answer}</p>
+              
+              {/* Flashcard Image - Only show when answer is revealed */}
+              {currentCard.image && (
+                <div className="mt-4 flex justify-center">
+                  <FlashcardImage 
+                    flashcard={currentCard}
+                    size="md"
+                  />
+                </div>
+              )}
             </div>
           ) : (
             <button 

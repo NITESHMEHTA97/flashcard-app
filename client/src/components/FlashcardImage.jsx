@@ -1,18 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { flashcardAPI } from '../services/api';
 
 export default function FlashcardImage({ flashcard, size = 'sm', showControls = false, onImageUpdate }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const fileInputRef = React.useRef(null);
 
   const imageUrl = flashcardAPI.getImageUrl(flashcard);
 
   const sizeClasses = {
-    sm: 'w-12 h-10',   // Small - for lists
-    md: 'w-32 h-24',   // Medium - for study mode
-    lg: 'w-48 h-36'    // Large - for forms
+    container: {
+      xs: 'w-10 h-8 !min-w-[2.5rem]',
+      sm: 'w-16 h-12',
+      md: 'w-24 h-20',
+      lg: 'w-full max-w-xs h-48'
+    },
+    image: {
+      xs: 'w-full h-full object-contain',
+      sm: 'w-full h-full object-cover',
+      md: 'w-full h-full object-cover',
+      lg: 'w-full h-full object-cover'
+    }
   };
+
+  // Close modal when pressing Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setModalOpen(false);
+      }
+    };
+
+    if (modalOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [modalOpen]);
 
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
@@ -64,12 +95,17 @@ export default function FlashcardImage({ flashcard, size = 'sm', showControls = 
           accept="image/*"
           className="hidden"
           id={`image-upload-${flashcard._id}`}
+          disabled={uploading}
         />
         <label
           htmlFor={`image-upload-${flashcard._id}`}
-          className="cursor-pointer text-blue-600 hover:text-blue-800 text-sm"
+          className={`inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white ${
+            uploading 
+              ? 'bg-blue-400 cursor-not-allowed' 
+              : 'bg-blue-600 hover:bg-blue-700 cursor-pointer'
+          } transition-colors duration-200`}
         >
-          {uploading ? 'Uploading...' : '+ Add Image'}
+          {uploading ? 'Uploading...' : 'Add Image'}
         </label>
       </div>
     );
@@ -80,28 +116,44 @@ export default function FlashcardImage({ flashcard, size = 'sm', showControls = 
     <div className="flex flex-col items-center">
       {/* Thumbnail */}
       <div 
-        className={`${sizeClasses[size]} border border-gray-300 rounded cursor-pointer overflow-hidden hover:border-blue-500 transition-colors`}
+        className={`relative group ${sizeClasses.container[size]} flex-shrink-0 ${!imageLoaded ? 'animate-pulse' : ''}`}
         onClick={() => setModalOpen(true)}
       >
-        <img 
-          src={imageUrl}
-          alt="Flashcard"
-          className="w-full h-full object-cover"
-        />
+        <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-md overflow-hidden">
+          <img 
+            src={imageUrl}
+            alt="Flashcard"
+            className={`${sizeClasses.image[size]} max-w-[2.5rem] max-h-[2rem] transition-transform duration-300 group-hover:scale-105`}
+            onLoad={() => setImageLoaded(true)}
+            style={{
+              maxWidth: '40px',
+              maxHeight: '32px',
+              width: 'auto',
+              height: 'auto'
+            }}
+          />
+        </div>
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-md" />
       </div>
 
       {/* Controls */}
       {showControls && (
-        <div className="flex gap-2 mt-1">
+        <div className="flex gap-2 mt-2">
           <button
-            onClick={() => setModalOpen(true)}
-            className="text-blue-600 hover:text-blue-800 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              setModalOpen(true);
+            }}
+            className="text-xs px-2 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition-colors"
           >
             View
           </button>
           <button
-            onClick={handleRemoveImage}
-            className="text-red-600 hover:text-red-800 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemoveImage();
+            }}
+            className="text-xs px-2 py-1 bg-red-50 text-red-600 hover:bg-red-100 rounded transition-colors"
           >
             Remove
           </button>
@@ -111,22 +163,67 @@ export default function FlashcardImage({ flashcard, size = 'sm', showControls = 
       {/* Full Image Modal */}
       {modalOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-100 z-[9999] flex items-center justify-center p-4 transition-opacity duration-300"
           onClick={() => setModalOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.95)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+            overflow: 'auto'
+          }}
         >
-          <div className="relative max-w-4xl max-h-full">
+          <div 
+            className="relative w-full h-full flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
             <button
-              onClick={() => setModalOpen(false)}
-              className="absolute -top-10 right-0 text-white text-lg bg-black bg-opacity-50 rounded-full w-8 h-8 flex items-center justify-center"
+              onClick={(e) => {
+                e.stopPropagation();
+                setModalOpen(false);
+              }}
+              className="fixed top-4 right-4 z-10 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors"
+              aria-label="Close"
+              style={{
+                position: 'fixed',
+                top: '1rem',
+                right: '1rem',
+                zIndex: 10000,
+                color: 'white',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                borderRadius: '9999px',
+                padding: '0.5rem',
+                cursor: 'pointer',
+                border: 'none',
+                outline: 'none'
+              }}
             >
-              ✕
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-            <img 
-              src={imageUrl} 
-              alt="Full size"
-              className="max-w-full max-h-[80vh] object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
+
+            {/* Image Container */}
+            <div className="max-w-full max-h-full flex items-center justify-center">
+              <img 
+                src={imageUrl} 
+                alt="Full size flashcard"
+                className="max-w-[90vw] max-h-[90vh] object-contain"
+                style={{
+                  maxWidth: '90vw',
+                  maxHeight: '90vh',
+                  objectFit: 'contain'
+                }}
+              />
+            </div>
           </div>
         </div>
       )}

@@ -216,10 +216,10 @@ export default function EditCardPage() {
 
         {/* Image Upload Section */}
         {flashcard && (
-          <div>
+          <div className="mb-2">
             <FlashcardImage 
               flashcard={flashcard}
-              size="lg"
+              size="sm"
               showControls={true}
               onImageUpdate={loadFlashcard}
             />
