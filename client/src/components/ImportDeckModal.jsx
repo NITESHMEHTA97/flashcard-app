@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { deckAPI } from '../services/api';
 import { useApp } from '../context/AppContext';
+import { FiExternalLink } from 'react-icons/fi';
 
 export default function ImportDeckModal({ isOpen, onClose, onImport }) {
   const [file, setFile] = useState(null);
@@ -89,6 +90,17 @@ export default function ImportDeckModal({ isOpen, onClose, onImport }) {
               className="hidden"
               id="file-input"
             />
+            <div className="flex justify-end mb-2">
+              <a 
+                href="/sample_import.json" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm text-primary-600 hover:text-primary-800 flex items-center"
+              >
+                <FiExternalLink className="mr-1" size={14} />
+                View Example Format
+              </a>
+            </div>
             <label
               htmlFor="file-input"
               className="cursor-pointer block"
